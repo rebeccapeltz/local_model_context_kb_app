@@ -179,4 +179,9 @@ def history(session_id):
 
 
 if __name__ == "__main__":
-  app.run(debug=True, port=5000)
+  # Port 5000 is claimed by macOS's AirPlay Receiver on many Macs, so this
+  # defaults to 5500 instead. Whatever port you use, open the app through
+  # Flask itself (http://localhost:5500/) rather than opening static/index.html
+  # directly or via a separate static file server — the page's fetch() calls
+  # are relative paths and need to hit this same Flask server.
+  app.run(debug=True, port=5500)
