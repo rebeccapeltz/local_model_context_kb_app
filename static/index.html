@@ -196,6 +196,18 @@
     color: var(--ink-soft);
     padding: 0 0 10px;
   }
+  .timer-line {
+    min-height: 14px;
+    padding: 6px 0 0;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  .timer-line.pending { color: var(--tool); }
+  .turn .elapsed {
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink-soft);
+  }
 </style>
 </head>
 <body>
@@ -214,6 +226,7 @@
     <p class="hint" id="hint">Ask a question below. Say "save that to a folder called &lt;name&gt;" to write the answer to disk.</p>
 
     <div class="thread" id="thread"></div>
+    <p class="hint timer-line" id="timerStatus"></p>
 
     <form class="composer" id="composer">
       <textarea id="messageInput" placeholder="Ask a question…" disabled></textarea>
@@ -230,15 +243,40 @@
   const composer = document.getElementById('composer');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
+  const timerStatus = document.getElementById('timerStatus');
 
   let sessionId = null;
+  let timerInterval = null;
+
+  function formatSeconds(ms) {
+    return (ms / 1000).toFixed(1) + 's';
+  }
+
+  function startTimer() {
+    const startedAt = performance.now();
+    timerStatus.classList.add('pending');
+    timerStatus.textContent = 'Thinking… 0.0s';
+    timerInterval = setInterval(() => {
+      timerStatus.textContent = 'Thinking… ' + formatSeconds(performance.now() - startedAt);
+    }, 100);
+    return startedAt;
+  }
+
+  function stopTimer(startedAt) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerStatus.classList.remove('pending');
+    timerStatus.textContent = '';
+    return performance.now() - startedAt;
+  }
 
   // Plain-text turns (user input, tool/error output): rendered with
   // textContent so nothing in them is ever interpreted as HTML.
-  function addTurn(who, text, cls) {
+  function addTurn(who, text, cls, elapsedMs) {
     const div = document.createElement('div');
     div.className = 'turn ' + (cls || '');
-    div.innerHTML = `<div class="who">${who}</div><pre></pre>`;
+    const label = elapsedMs != null ? `${who} <span class="elapsed">· ${formatSeconds(elapsedMs)}</span>` : who;
+    div.innerHTML = `<div class="who">${label}</div><pre></pre>`;
     div.querySelector('pre').textContent = text;
     thread.appendChild(div);
     thread.scrollTop = thread.scrollHeight;
@@ -247,10 +285,11 @@
   // Assistant turns: the server already converted markdown -> HTML and
   // sanitized it (see render_markdown_safe in app.py), so it's safe to
   // drop straight into innerHTML here.
-  function addAssistantTurn(html) {
+  function addAssistantTurn(html, elapsedMs) {
     const div = document.createElement('div');
     div.className = 'turn assistant';
-    div.innerHTML = `<div class="who">Assistant</div><div class="markdown-body"></div>`;
+    const label = elapsedMs != null ? `Assistant <span class="elapsed">· ${formatSeconds(elapsedMs)}</span>` : 'Assistant';
+    div.innerHTML = `<div class="who">${label}</div><div class="markdown-body"></div>`;
     div.querySelector('.markdown-body').innerHTML = html;
     thread.appendChild(div);
     thread.scrollTop = thread.scrollHeight;
@@ -293,6 +332,7 @@
     addTurn('You', message, 'user');
     messageInput.value = '';
     sendBtn.disabled = true;
+    const startedAt = startTimer();
 
     try {
       const res = await fetch('/api/chat', {
@@ -301,14 +341,16 @@
         body: JSON.stringify({ session_id: sessionId, message }),
       });
       const data = await res.json();
+      const elapsedMs = stopTimer(startedAt);
       if (data.error) {
-        addTurn('Error', data.error, 'tool');
+        addTurn('Error', data.error, 'tool', elapsedMs);
       } else if (data.response_html) {
-        addAssistantTurn(data.response_html);
+        addAssistantTurn(data.response_html, elapsedMs);
       } else {
-        addTurn('Assistant', data.response || '(no reply)');
+        addTurn('Assistant', data.response || '(no reply)', '', elapsedMs);
       }
     } catch (err) {
+      stopTimer(startedAt);
       addTurn('Error', String(err), 'tool');
     } finally {
       sendBtn.disabled = false;
