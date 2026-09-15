@@ -107,6 +107,56 @@
     margin: 0;
   }
 
+  /* Rendered markdown from the assistant */
+  .markdown-body { font-size: 14.5px; }
+  .markdown-body > *:first-child { margin-top: 0; }
+  .markdown-body > *:last-child { margin-bottom: 0; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3,
+  .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+    font-family: Georgia, "Times New Roman", serif;
+    margin: 14px 0 6px;
+    line-height: 1.3;
+  }
+  .markdown-body p { margin: 8px 0; }
+  .markdown-body ul, .markdown-body ol { margin: 8px 0; padding-left: 22px; }
+  .markdown-body li { margin: 3px 0; }
+  .markdown-body a { color: var(--accent); }
+  .markdown-body code {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    background: var(--accent-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+  .markdown-body pre {
+    background: #232323;
+    color: #F3F1EA;
+    padding: 12px 14px;
+    border-radius: 5px;
+    overflow-x: auto;
+  }
+  .markdown-body pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+  .markdown-body blockquote {
+    margin: 8px 0;
+    padding: 2px 14px;
+    border-left: 3px solid var(--rule);
+    color: var(--ink-soft);
+  }
+  .markdown-body table {
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13.5px;
+  }
+  .markdown-body th, .markdown-body td {
+    border: 1px solid var(--rule);
+    padding: 5px 10px;
+    text-align: left;
+  }
+
   form.composer {
     display: flex;
     gap: 8px;
@@ -183,11 +233,25 @@
 
   let sessionId = null;
 
+  // Plain-text turns (user input, tool/error output): rendered with
+  // textContent so nothing in them is ever interpreted as HTML.
   function addTurn(who, text, cls) {
     const div = document.createElement('div');
     div.className = 'turn ' + (cls || '');
     div.innerHTML = `<div class="who">${who}</div><pre></pre>`;
     div.querySelector('pre').textContent = text;
+    thread.appendChild(div);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  // Assistant turns: the server already converted markdown -> HTML and
+  // sanitized it (see render_markdown_safe in app.py), so it's safe to
+  // drop straight into innerHTML here.
+  function addAssistantTurn(html) {
+    const div = document.createElement('div');
+    div.className = 'turn assistant';
+    div.innerHTML = `<div class="who">Assistant</div><div class="markdown-body"></div>`;
+    div.querySelector('.markdown-body').innerHTML = html;
     thread.appendChild(div);
     thread.scrollTop = thread.scrollHeight;
   }
@@ -239,6 +303,8 @@
       const data = await res.json();
       if (data.error) {
         addTurn('Error', data.error, 'tool');
+      } else if (data.response_html) {
+        addAssistantTurn(data.response_html);
       } else {
         addTurn('Assistant', data.response || '(no reply)');
       }

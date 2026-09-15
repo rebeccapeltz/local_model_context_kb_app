@@ -31,45 +31,13 @@ keyed the same way by session_id.
 import uuid
 from pathlib import Path
 
-import bleach
-import markdown
 from flask import Flask, jsonify, request
 from openai import OpenAI
 
 import context
 import tool
 import tool_execution
-
-# Tags/attributes allowed through to the browser after markdown rendering.
-# Keeps things like headings, code blocks, tables, and links, while
-# stripping anything a model (or injected context file) could use to run
-# script in the page — <script>, inline event handlers, javascript: URLs.
-_ALLOWED_TAGS = [
-    "p", "br", "hr",
-    "h1", "h2", "h3", "h4", "h5", "h6",
-    "strong", "em", "b", "i", "code", "pre", "blockquote",
-    "ul", "ol", "li",
-    "a", "img",
-    "table", "thead", "tbody", "tr", "th", "td",
-]
-_ALLOWED_ATTRS = {
-    "a": ["href", "title", "rel", "target"],
-    "img": ["src", "alt", "title"],
-}
-
-
-def render_markdown_safe(md_text: str) -> str:
-  """Convert markdown to HTML for display, then sanitize it.
-
-  The raw markdown itself is never modified — this is only used to build
-  the `response_html` field returned to the browser. session["messages"]
-  and anything saved to disk always keep the original markdown string.
-  """
-  html = markdown.markdown(
-      md_text or "",
-      extensions=["fenced_code", "tables", "sane_lists", "nl2br"],
-  )
-  return bleach.clean(html, tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS)
+import markdown
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -197,9 +165,14 @@ def chat():
   except Exception as e:
     return jsonify({"error": f"Agent error: {e}"}), 500
 
+  # convert ai_response from Markdown to HTML for display on web page
+  html_response = markdown.markdown(ai_response)
+  print(ai_response)
+  print('******')
+  print(html_response)
+                 
   return jsonify({
-      "response": ai_response,               # raw markdown — unchanged
-      "response_html": render_markdown_safe(ai_response),  # for display only
+      "response": ai_response,
       "content_size": _total_content_size(session["messages"]),
   })
 
@@ -213,9 +186,4 @@ def history(session_id):
 
 
 if __name__ == "__main__":
-  # Port 5000 is claimed by macOS's AirPlay Receiver on many Macs, so this
-  # defaults to 5500 instead. Whatever port you use, open the app through
-  # Flask itself (http://localhost:5500/) rather than opening static/index.html
-  # directly or via a separate static file server — the page's fetch() calls
-  # are relative paths and need to hit this same Flask server.
-  app.run(debug=True, port=5500)
+  app.run(debug=True, port=5000)

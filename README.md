@@ -10,6 +10,8 @@ pip install -r requirements.txt
 pip freeze > requirements.txt
 deactivate
 ```
+If using VS Code, make sure that your pointing to the python in your venv
+
 
 ## Test Queries Using Popular Legal Words
 
