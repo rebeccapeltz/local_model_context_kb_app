@@ -28,7 +28,6 @@ replace SESSIONS with a real store (Redis, a database, flask-session)
 keyed the same way by session_id.
 """
 
-import sys
 import uuid
 from pathlib import Path
 
@@ -40,23 +39,6 @@ from openai import OpenAI
 import context
 import tool
 import tool_execution
-
-
-def resource_path(relative_path: str) -> str:
-  """Resolve a bundled resource (like the static/ folder) whether running
-  from source or from a PyInstaller-built executable.
-
-  PyInstaller's --onefile mode extracts everything into a temporary
-  directory at startup and exposes that location as sys._MEIPASS. When
-  running normally from source, that attribute doesn't exist, so this
-  falls back to the current directory. Only used for bundled, read-only
-  assets (static/) — NOT for the knowledge base or context files, which
-  intentionally stay relative to wherever the user launches the app from
-  (see KB_DIR / CONTEXT_DIR below).
-  """
-  base_path = getattr(sys, "_MEIPASS", Path(".").resolve())
-  return str(Path(base_path) / relative_path)
-
 
 # Tags/attributes allowed through to the browser after markdown rendering.
 # Keeps things like headings, code blocks, tables, and links, while
@@ -110,7 +92,7 @@ SESSIONS: dict[str, dict] = {}
 # Shared client pointed at the local LM Studio server.
 client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
 
-app = Flask(__name__, static_folder=resource_path("static"), static_url_path="")
+app = Flask(__name__, static_folder="static", static_url_path="")
 
 
 # ---------------------------------------------------------------------------
@@ -236,21 +218,4 @@ if __name__ == "__main__":
   # Flask itself (http://localhost:5500/) rather than opening static/index.html
   # directly or via a separate static file server — the page's fetch() calls
   # are relative paths and need to hit this same Flask server.
-  PORT = 5500
-  IS_FROZEN = getattr(sys, "frozen", False)  # True inside a PyInstaller build
-
-  if IS_FROZEN:
-    # debug=True's auto-reloader re-executes the running process on file
-    # changes, which doesn't make sense (and can misbehave) inside a
-    # bundled executable — there's no source file for it to watch anyway.
-    import threading
-    import webbrowser
-
-    def _open_browser():
-      webbrowser.open(f"http://localhost:{PORT}/")
-
-    # Give the server a moment to start listening before opening the tab.
-    threading.Timer(1.0, _open_browser).start()
-    app.run(debug=False, port=PORT)
-  else:
-    app.run(debug=True, port=PORT)
+  app.run(debug=True, port=5500)

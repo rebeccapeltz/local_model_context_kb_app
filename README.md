@@ -9,6 +9,7 @@ pip install ....
 pip install -r requirements.txt
 pip freeze > requirements.txt
 deactivate
+python app.py
 ```
 If using VS Code, make sure that your pointing to the python in your venv
 
