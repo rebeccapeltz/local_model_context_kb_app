@@ -1,5 +1,8 @@
 # LM Studio Agent
 
+## VS Code
+- Command Pallete  CTL-SHFT-P (windows)  cmd-shft-p(MAC)
+- Create Environment
 ## Create Virutal Environment
 
 ```zsh

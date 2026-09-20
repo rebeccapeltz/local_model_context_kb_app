@@ -13,7 +13,8 @@ def process_agent_turn(client: OpenAI,
 
   while True:
     response = client.chat.completions.create(
-        model="local-model",
+        model="nvidia/nemotron-3-nano-4b",
+       #model="local-model",
         messages=messages,
         tools=tools,
         tool_choice=current_tool_choice,
