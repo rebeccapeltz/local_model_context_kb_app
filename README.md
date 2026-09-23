@@ -60,6 +60,12 @@ pyinstaller --onefile \
 
 ### Windows
 
+#### Basic Steps
+1. Open the Command Prompt (search for cmd in the Windows Start Menu).
+2. Navigate to your project directory using the cd command (e.g., cd path\to\your\project).
+3. Make sure you clear out the old cache folders (build/, dist/, and any .spec files) just like you did on the Mac before running the new command.
+4. Run the Windows compilation command (remembering to use the semicolon ; for --add-data).
+
 #### Run installer with ; instead of :
 ```
 pyinstaller --onefile --windowed --add-data "static;static" --distpath .\windows-dist\knowledge_assistant app.py
@@ -70,7 +76,15 @@ pyinstaller --onefile --windowed --add-data "static;static" --distpath .\windows
 pyinstaller --onefile --windowed --icon=logo.ico --add-data "static;static" --distpath .\windows-dist\knowledge_assistant app.py
 ```
 
-#### Build Windows using build_win.bat
+#### SAVE TIME: Build Windows using build_win.bat
+
+
+#### Execute build-win.bat
+- Locate `build-win.bat` in file explorer 
+- Double click to execute PyInstaller
+
+
+##### Manual Steps
 ```
 @echo off
 echo Cleaning up old build files...
@@ -81,10 +95,8 @@ pyinstaller --onefile --windowed --add-data "static;static" --distpath .\windows
 echo Build Complete! Check the windows-dist folder.
 pause
 ```
-1. Open the Command Prompt (search for cmd in the Windows Start Menu).
-2. Navigate to your project directory using the cd command (e.g., cd path\to\your\project).
-3. Make sure you clear out the old cache folders (build/, dist/, and any .spec files) just like you did on the Mac before running the new command.
-4. Run the Windows compilation command (remembering to use the semicolon ; for --add-data).
+
+
 
 
 
