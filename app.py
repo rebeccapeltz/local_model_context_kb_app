@@ -54,9 +54,13 @@ def resource_path(relative_path: str) -> str:
   intentionally stay relative to wherever the user launches the app from
   (see KB_DIR / CONTEXT_DIR below).
   """
-  base_path = getattr(sys, "_MEIPASS", Path(".").resolve())
-  return str(Path(base_path) / relative_path)
-
+  # base_path = getattr(sys, "_MEIPASS", Path(".").resolve())
+  # return str(Path(base_path) / relative_path)
+  if getattr(sys, 'frozen', False):
+    base_path = Path(sys._MEIPASS)
+  else:
+    base_path = Path(__file__).resolve().parent
+  return str(base_path / relative_path)
 
 # Tags/attributes allowed through to the browser after markdown rendering.
 # Keeps things like headings, code blocks, tables, and links, while
@@ -110,8 +114,13 @@ SESSIONS: dict[str, dict] = {}
 # Shared client pointed at the local LM Studio server.
 client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
 
-app = Flask(__name__, static_folder=resource_path("static"), static_url_path="")
-
+# app = Flask(__name__, static_folder=resource_path("static"), static_url_path="")
+# Initialize Flask with the safe resource paths
+app = Flask(
+    __name__, 
+    static_folder=resource_path("static"), 
+    static_url_path=""
+)
 
 # ---------------------------------------------------------------------------
 # Helpers

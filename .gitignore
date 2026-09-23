@@ -1,0 +1,7 @@
+.venv
+__pycache__
+.DS_Store
+.vscode/
+build
+knowledge_assistant.spec
+app.spec
