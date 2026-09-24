@@ -52,8 +52,22 @@ pyinstaller --onefile \
   --distpath ./apple-dist/knowledge_assistant \
   app.py
 ```
+#### Start app - change to Command Prompt
+
+```
+cmd
+C:\<path to project>\local_model_context_kb_app\windows-dist\knowledge_assistant>app.exe
+```
+
+#### Stop app.exe
+
+```
+taskkill -f -im app.exe
+```
 
 #### Run app
+
+
 ```bash
 ./apple-dist/knowledge_assistant/app
 ```
@@ -118,4 +132,16 @@ chmod +x apple-dist/knowledge_assistant
 
 ```
 xattr -d com.apple.quarantine apple-dist/knowledge_assistant
+```
+
+## Create 1 executable  file in the root for Mac
+
+```bash
+pyinstaller --onefile -name=app_mac --distpath=. app.py
+```
+
+## Create 1 executable file in the root for Windows
+
+```bash
+pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
 ```
