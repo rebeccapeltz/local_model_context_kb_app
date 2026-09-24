@@ -137,11 +137,18 @@ xattr -d com.apple.quarantine apple-dist/knowledge_assistant
 ## Create 1 executable  file in the root for Mac
 
 ```bash
-pyinstaller --onefile -name=app_mac --distpath=. app.py
+pyinstaller --onefile --name=app_mac --distpath=. --add-data "static:static" app.py
+
+# execute
+./app_mac
 ```
+
 
 ## Create 1 executable file in the root for Windows
 
 ```bash
 pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
+
+# execute
+./app_windows.exe
 ```
