@@ -1,154 +1,142 @@
-# LM Studio Agent
+# LM Studio Knowledge Assistant
 
-## VS Code
-- Command Pallete  CTL-SHFT-P (windows)  cmd-shft-p(MAC)
-- Create Environment
-## Create Virutal Environment
+A Flask web app for a local, agent-based learning assistant. Ask a
+question, get a markdown answer from a local model (via LM Studio),
+and optionally save the answer as a markdown note in a local
+knowledge base.
+
+Originally a CLI tool; reworked as a Flask app with a browser UI so it
+can be packaged as a single executable for non-technical users
+(students) to double-click and run.
+
+## Prerequisites
+
+- Python 3.10+
+- [LM Studio](https://lmstudio.ai) installed, with a model loaded and
+  its local server running on `http://localhost:1234`. **The app will
+  start fine without this, but every question will fail** — LM Studio
+  is a separate program and isn't bundled by anything below.
+
+## Running from source
 
 ```zsh
 python -m venv .venv
-source .venv/bin/activate
-pip install ....
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-pip freeze > requirements.txt
-deactivate
 python app.py
 ```
-If using VS Code, make sure that your pointing to the python in your venv
 
+Open **http://localhost:5500/** — not `5000`. Port 5000 is commonly
+claimed by macOS's AirPlay Receiver, so the app defaults to 5500
+instead.
 
-## Test Queries Using Popular Legal Words
+The page auto-starts a session, lets you choose whether to load
+`context_files/` into memory, and gives you a chat box. Both
+`context_files/` and `my_knowledge_base/` are created automatically
+next to `app.py` the first time they're needed — nothing to set up by
+hand.
 
-Create a contract that binds me to deliver a 1 hours talk online. I will be paid for the talk.  I must be able to share notes from the talk online.
+To save an answer, just ask in plain language, e.g.:
 
-## System Prompt
+### Save to a folder under `my_knowledge_base`
+For example, if you want to save the LLM Response dealing with a legal question, prompt with:
+`Save that to a folder called Legal`
 
-You are a precise, helpful AI assistant. Answer the user's question accurately, concisely, and directly. 
+## Building a standalone executable
 
-Rules:
-- Rely only on clear facts. Do not invent or guess information if you do not know.
-- Keep your answers short unless the user asks for detailed explanations.
-- Use clear formatting like bullet points when listing multiple items.
-- Avoid filler words, polite fluff, or repeating the user's question back to them.			
+Students should only ever need **one file** — the built executable.
+None of the source, `static/`, or a Python install needs to travel
+with it; `--add-data` bundles `static/index.html` directly into the
+binary.
 
-Legal Prompt: Create a contract that binds me to deliver a 1 hours talk online. I will be paid for the talk.  I must be able to share notes from the talk online.
-
-Save to folder: Save to my Legal folder
-
-## PyInstaller Executable
-
-### Apple
-
-#### Clear Previous PyInstaller Build if Exists
-
-```bash
-rm -rf build/ dist/ app.spec
-```
-#### Run Pyinstaller
+**Clear any previous build first**, using whatever `--name` you built
+with last time (the generated `.spec` file is named after it, not
+always `app.spec`):
 
 ```bash
-pyinstaller --onefile \
-  --add-data "static:static" \
-  --distpath ./apple-dist/knowledge_assistant \
-  app.py
-```
-#### Start app - change to Command Prompt
-
-```
-cmd
-C:\<path to project>\local_model_context_kb_app\windows-dist\knowledge_assistant>app.exe
+rm -rf build dist *.spec        # macOS/Linux
+# rmdir /s /q build dist && del /q *.spec      Windows (cmd)
 ```
 
-#### Stop app.exe
-
-```
-taskkill -f -im app.exe
-```
-
-#### Run app
-
+### macOS
 
 ```bash
-./apple-dist/knowledge_assistant/app
+pyinstaller --onefile --name=app-mac --distpath=. --add-data "static:static" app.py
+./app-mac
+```
+
+If you downloaded a pre-built binary rather than building it
+yourself, macOS may attach a quarantine flag that blocks it from
+running:
+
+```bash
+chmod +x app-mac
+xattr -d com.apple.quarantine app-mac
 ```
 
 ### Windows
 
-#### Basic Steps
-1. Open the Command Prompt (search for cmd in the Windows Start Menu).
-2. Navigate to your project directory using the cd command (e.g., cd path\to\your\project).
-3. Make sure you clear out the old cache folders (build/, dist/, and any .spec files) just like you did on the Mac before running the new command.
-4. Run the Windows compilation command (remembering to use the semicolon ; for --add-data).
-
-#### Run installer with ; instead of :
 ```
-pyinstaller --onefile --windowed --add-data "static;static" --distpath .\windows-dist\knowledge_assistant app.py
+pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
 ```
 
-#### Add windows icon
-```
-pyinstaller --onefile --windowed --icon=logo.ico --add-data "static;static" --distpath .\windows-dist\knowledge_assistant app.py
-```
+Run the result by double-clicking `app-windows.exe`.
 
-#### SAVE TIME: Build Windows using build_win.bat
+> **The `--add-data` flag is required.** Without it, the exe starts
+> with no errors but the browser can't find the page — `static/`
+> never got bundled in. This is the one thing most worth
+> double-checking if a build "runs but the page 404s."
+>
+> Also note the separator differs by OS: `:` on macOS/Linux, `;` on
+> Windows.
 
+Optional: `--icon=logo.ico` adds a custom icon on Windows. A batch
+file (`build-win.bat`) wrapping the clean + build steps is handy if
+you're rebuilding often:
 
-#### Execute build-win.bat
-- Locate `build-win.bat` in file explorer 
-- Double click to execute PyInstaller
-
-
-##### Manual Steps
-```
+```bat
 @echo off
 echo Cleaning up old build files...
 rmdir /s /q build dist
-del /q app.spec
+del /q app-windows.spec
 echo Starting PyInstaller Build...
-pyinstaller --onefile --windowed --add-data "static;static" --distpath .\windows-dist\knowledge_assistant app.py
-echo Build Complete! Check the windows-dist folder.
+pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
+echo Build Complete!
 pause
 ```
 
+### Distributing to students
 
+Each student needs only the single executable — download it, place
+it in any folder, make sure LM Studio is running, double-click.
+`context_files/` and `my_knowledge_base/` will appear next to it
+automatically. If you want students to start with reference material
+already loaded, include a `context_files/` folder (that exact name)
+alongside the exe with your `.md` files in it.
 
-
-
-
-
-### Apple Can Have Problems with PyInstaller
-Use this code to ensure you get the executable stored in the correct location.  You can set up the directory structure as you chose.
-
-```bash
-pyinstaller --distpath ./apple-dist app.py
-```
-
-
-```
-chmod +x apple-dist/knowledge_assistant
-```
-
-- Clear Apple Quarantine
+Distribute built executables via **GitHub Releases**, not the repo
+itself — they're too large for git (100MB+) and don't belong in
+version control. Build artifacts (`build/`, `dist/`, `*.spec`,
+`__pycache__/`) should be gitignored too:
 
 ```
-xattr -d com.apple.quarantine apple-dist/knowledge_assistant
+build/
+dist/
+__pycache__/
+*.pyc
 ```
 
-## Create 1 executable  file in the root for Mac
+## Example prompt
 
-```bash
-pyinstaller --onefile --name=app_mac --distpath=. --add-data "static:static" app.py
+> Create a contract that binds me to deliver a 1 hour talk online. I
+> will be paid for the talk. I must be able to share notes from the
+> talk online.
+>
+> Save to folder: Legal
 
-# execute
-./app_mac
-```
+## VS Code setup
 
-
-## Create 1 executable file in the root for Windows
-
-```bash
-pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
-
-# execute
-./app_windows.exe
-```
+- Command Palette: `Cmd+Shift+P` (Mac) / `Ctrl+Shift+P` (Windows) →
+  "Python: Create Environment"
+- Make sure VS Code's selected Python interpreter points at
+  `.venv`, not a system Python
