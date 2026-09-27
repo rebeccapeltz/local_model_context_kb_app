@@ -61,8 +61,8 @@ rm -rf build dist *.spec        # macOS/Linux
 ### macOS
 
 ```bash
-pyinstaller --onefile --name=app-mac --distpath=. --add-data "static:static" app.py
-./app-mac
+pyinstaller --onefile --name=app_mac --distpath=. --add-data "static:static" app.py
+./app_mac
 ```
 
 If you downloaded a pre-built binary rather than building it
@@ -70,17 +70,17 @@ yourself, macOS may attach a quarantine flag that blocks it from
 running:
 
 ```bash
-chmod +x app-mac
-xattr -d com.apple.quarantine app-mac
+chmod +x app_mac
+xattr -d com.apple.quarantine app_mac
 ```
 
 ### Windows
 
 ```
-pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
+pyinstaller --onefile --name=app_windows --distpath=. --add-data "static;static" app.py
 ```
 
-Run the result by double-clicking `app-windows.exe`.
+Run the result by double-clicking `app_windows.exe`.
 
 > **The `--add-data` flag is required.** Without it, the exe starts
 > with no errors but the browser can't find the page — `static/`
@@ -98,9 +98,9 @@ you're rebuilding often:
 @echo off
 echo Cleaning up old build files...
 rmdir /s /q build dist
-del /q app-windows.spec
+del /q app_windows.spec
 echo Starting PyInstaller Build...
-pyinstaller --onefile --name=app-windows --distpath=. --add-data "static;static" app.py
+pyinstaller --onefile --name=app_windows --distpath=. --add-data "static;static" app.py
 echo Build Complete!
 pause
 ```
