@@ -4,5 +4,4 @@ __pycache__
 .vscode/
 build
 knowledge_assistant.spec
-./app_mac.spec
-./app_windows.spec
+app.spec
