@@ -65,7 +65,7 @@ pyinstaller --onefile --name=app_mac --distpath=. --add-data "static:static" app
 ./app_mac
 ```
 
-If you downloaded a pre-built binary rather than building it
+If you a pre-built binary rather than building it
 yourself, macOS may attach a quarantine flag that blocks it from
 running:
 
@@ -76,8 +76,8 @@ xattr -d com.apple.quarantine app_mac
 
 ### Windows
 
-```
-pyinstaller --onefile --name=app_windows --distpath=. --add-data "static;static" app.py
+```bash
+pyinstaller --onefile --name=app_windows --distpath=. --add-data="static;static" app.py
 ```
 
 Run the result by double-clicking `app_windows.exe`.
